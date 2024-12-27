@@ -271,4 +271,12 @@ public class FloatExp {
         if (a.compareTo(b) < 0) return a;
         else return b;
     }
+
+    public double getBase() {
+        return base;
+    }
+
+    public int getExp() {
+        return exp;
+    }
 }

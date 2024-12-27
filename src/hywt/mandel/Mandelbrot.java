@@ -19,7 +19,7 @@ public class Mandelbrot {
     private List<List<BLA>> tableComplex;
     private List<List<BLAFE>> table;
 
-    private boolean refVaild;
+    protected boolean refVaild;
 
 
     private ExecutorService service;
@@ -338,7 +338,7 @@ public class Mandelbrot {
                 refIter++;
             }
             if (refIter >= ref.size()) return new PTBLAFEResult(iter, true, null, refIter);
-            if (dz.getRe().scale() > -150 && dz.getIm().scale() > -150) {
+            if (dz.getRe().scale() > -75 && dz.getIm().scale() > -75) {
                 return new PTBLAFEResult(iter, false, dz.toComplex(), refIter);
             }
 
@@ -507,5 +507,16 @@ public class Mandelbrot {
 
     public FloatExp getScale() {
         return scale;
+    }
+
+    public List<FloatExpComplex> getRef() {
+        if (!refVaild) getReferenceOrbit();
+        return ref;
+    }
+
+    protected void setRef(List<FloatExpComplex> ref) {
+        this.ref = ref;
+        refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+        refVaild = true;
     }
 }

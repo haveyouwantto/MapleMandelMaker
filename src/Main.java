@@ -16,21 +16,12 @@ public class Main {
         long iterations = 22067;
 
         Parameter p = new Parameter(new DeepComplex(re, im), scale, iterations);
-        Mandelbrot mandelbrot = new Mandelbrot(p);
-        Colorizer colorizer = new BasicEscapeColorizer();
+        Configuration config = new Configuration(p, new File("mmm_out"));
 
-        IterationMap iterationMap = new IterationMap(1920, 1080);
-        BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_BGR);
+        RenderManager man = new RenderManager(config);
+        man.save();
 
-        int i = 0;
-        while (mandelbrot.getScale().doubleValue() < 16) {
-            System.out.println(mandelbrot.getScale());
-
-            mandelbrot.render(iterationMap);
-            colorizer.paint(iterationMap, image);
-            ImageIO.write(image, "png", new File(String.format("%08d.png", i++)));
-            mandelbrot.zoomOut();
-        }
+        man.start();
 
     }
 }
