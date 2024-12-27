@@ -26,6 +26,10 @@ public class FloatExp {
         norm();
     }
 
+    public FloatExp(double val) {
+        this(val, 0);
+    }
+
     private FloatExp norm() {
         if (this.base == 0) {
             this.exp = 0;
@@ -65,70 +69,70 @@ public class FloatExp {
 
     public FloatExp add(FloatExp other) {
         if (other.base == 0) return this;
-        else if (this.base == 0) return other;
-        int expDiff = other.exp - this.exp;
-        if (expDiff == 0) return new FloatExp(this.base + other.base, this.exp);
-        else if (expDiff > 16) return other;
-        else {
-            return new FloatExp(this.base + other.base * getExp(other.exp - this.exp), this.exp);
+        else if (base == 0) return other;
+        int expDiff = other.exp - exp;
+        if (expDiff == 0) {
+            return new FloatExp(base + other.base, exp);
+        } else if (expDiff > 16) {
+            return other;
+        } else {
+            return new FloatExp(base + other.base * getExp(expDiff), exp);
         }
     }
 
     public FloatExp addMut(FloatExp other) {
         if (other.base == 0) return this;
-        else if (this.base == 0) {
-            this.base = other.base;
-            this.exp = other.exp;
+        else if (base == 0) {
+            base = other.base;
+            exp = other.exp;
             return this;
         }
-        int expDiff = other.exp - this.exp;
+        int expDiff = other.exp - exp;
         if (expDiff == 0) {
-            this.base += other.base;
-            return norm();
+            base += other.base;
+            return this.norm();
         } else if (expDiff > 16) {
-            this.base = other.base;
-            this.exp = other.exp;
+            base = other.base;
+            exp = other.exp;
             return this;
         } else {
-            this.base += other.base * getExp(expDiff);
-            return norm();
+            base += other.base * getExp(expDiff);
+            return this.norm();
         }
     }
 
     public FloatExp sub(FloatExp other) {
         if (other.base == 0) return this;
-        else if (this.base == 0) return other.rev();
+        else if (base == 0) return other.rev();
         int expDiff = other.exp - this.exp;
-        if (expDiff == 0) return new FloatExp(this.base - other.base, this.exp);
-        else if (expDiff > 16) return other.rev();
-        else {
-            return new FloatExp(this.base - other.base * getExp(other.exp - this.exp), this.exp);
+        if (expDiff == 0) {
+            return new FloatExp(this.base - other.base, this.exp);
+        } else if (expDiff > 16) {
+            return other.rev();
+        } else {
+            return new FloatExp(this.base - other.base * getExp(expDiff), this.exp);
         }
     }
 
     public FloatExp subMut(FloatExp other) {
         if (other.base == 0) return this;
-        else if (this.base == 0) {
-            this.base = -other.base;
-            this.exp = other.exp;
+        else if (base == 0) {
+            base = -other.base;
+            exp = other.exp;
             return this;
         }
         int expDiff = other.exp - this.exp;
         if (expDiff == 0) {
             this.base -= other.base;
-            return norm();
+            return this.norm();
         } else if (expDiff > 16) {
-            this.base = -other.base;
-            this.exp = other.exp;
+            base = -other.base;
+            exp = other.exp;
             return this;
         } else {
             this.base -= other.base * getExp(expDiff);
-            return norm();
+            return this.norm();
         }
-    }
-
-    public FloatExp mul(double other) {
-        return new FloatExp(this.base * other, this.exp);
     }
 
     public FloatExp mul(FloatExp other) {
@@ -138,21 +142,35 @@ public class FloatExp {
     public FloatExp mulMut(FloatExp other) {
         this.base *= other.base;
         this.exp += other.exp;
-        return norm();
+        return this.norm();
     }
 
     public FloatExp div(FloatExp other) {
+        if (other.base == 0) throw new ArithmeticException("divide by 0");
         return new FloatExp(this.base / other.base, this.exp - other.exp);
     }
 
-    public FloatExp div(double other) {
-        return new FloatExp(this.base / other, this.exp);
-    }
-
     public FloatExp divMut(FloatExp other) {
+        if (other.base == 0) throw new ArithmeticException("divide by 0");
         this.base /= other.base;
         this.exp -= other.exp;
-        return norm();
+        return this.norm();
+    }
+
+    public FloatExp add(double other) {
+        return add(new FloatExp(other));
+    }
+
+    public FloatExp sub(double other) {
+        return sub(new FloatExp(other));
+    }
+
+    public FloatExp mul(double other) {
+        return mul(new FloatExp(other));
+    }
+
+    public FloatExp div(double other) {
+        return div(new FloatExp(other));
     }
 
     public FloatExp abs() {
@@ -242,5 +260,15 @@ public class FloatExp {
         // Normalize the value to [1, 10)
         BigDecimal normalized = num.movePointLeft(exponent);
         return new FloatExp(normalized.doubleValue(), exponent);
+    }
+
+    public static FloatExp max(FloatExp a, FloatExp b) {
+        if (a.compareTo(b) > 0) return a;
+        else return b;
+    }
+
+    public static FloatExp min(FloatExp a, FloatExp b) {
+        if (a.compareTo(b) < 0) return a;
+        else return b;
     }
 }

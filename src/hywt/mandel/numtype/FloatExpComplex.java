@@ -15,7 +15,7 @@ public class FloatExpComplex {
 
     public FloatExp abs2() {
         // |z| = sqrt(re^2 + im^2)
-        return re.mul(re).add(im.mul(im));
+        return re.mul(re).addMut(im.mul(im));
     }
 
     public FloatExpComplex mul(FloatExpComplex other) {
@@ -26,18 +26,18 @@ public class FloatExpComplex {
     }
 
     public FloatExpComplex mul(double other) {
-        return new FloatExpComplex(re.mul(FloatExp.fromDouble(other)), im.mul(FloatExp.fromDouble(other)));
+        return new FloatExpComplex(re.mul(new FloatExp(other,0)), im.mul(new FloatExp(other,0)));
     }
 
     public FloatExpComplex square() {
-        return new FloatExpComplex(re.mul(re).sub(im.mul(im)), re.mul(im).mul(2));
+        return new FloatExpComplex(re.mul(re).subMut(im.mul(im)), re.mul(im).mul(2));
     }
 
     public FloatExpComplex div(FloatExpComplex other) {
-        FloatExp denom = other.re.mul(other.re).add(other.im.mul(other.im));
-        FloatExp rePart = re.mul(other.re).add(im.mul(other.im)).div(denom);
-        FloatExp imPart = im.mul(other.re).sub(re.mul(other.im)).div(denom);
-        return new FloatExpComplex(rePart, imPart);
+        return new FloatExpComplex(
+                this.re.div(other.re).subMut(this.im.div(other.im)),
+                this.re.div(other.im).addMut(this.im.div(other.re))
+        );
     }
 
     public FloatExpComplex add(FloatExpComplex other) {
