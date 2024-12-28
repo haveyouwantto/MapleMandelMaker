@@ -3,7 +3,6 @@ package hywt.mandel;
 import hywt.mandel.numtype.FloatExp;
 import hywt.mandel.numtype.FloatExpComplex;
 
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
@@ -12,13 +11,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
-import javax.xml.crypto.Data;
 
 public class RenderServer {
+    private static final Logger logger = Logger.getLogger(RenderServer.class.getName());
     private Mandelbrot mandelbrot;
     private Configuration configuration;
     private Map<Integer, TaskState> state;
@@ -26,6 +26,13 @@ public class RenderServer {
     private Colorizer colorizer;
 
     public RenderServer(Configuration config) throws IOException {
+        // Logger setup (optional custom formatting)
+        LogManager.getLogManager().reset();
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setLevel(Level.INFO);
+        consoleHandler.setFormatter(new TightFormatter()); // Set the custom tight formatter
+        logger.addHandler(consoleHandler);
+
         this.configuration = config;
         mandelbrot = new Mandelbrot(config.getParameter());
         colorizer = new BasicEscapeColorizer();
@@ -44,7 +51,7 @@ public class RenderServer {
         if (refFile.exists()) {
             List<FloatExpComplex> ref = RenderManager.readRef(new GZIPInputStream(new FileInputStream(refFile)));
             mandelbrot.setRef(ref);
-            System.out.println("Loaded reference");
+            logger.info("Loaded reference");
         } else {
             List<FloatExpComplex> ref = mandelbrot.getRef();
             OutputStream os = new GZIPOutputStream(new FileOutputStream(refFile));
@@ -53,7 +60,7 @@ public class RenderServer {
         }
 
         serverSocket = new ServerSocket(47392);
-        System.out.println("Server started on port " + serverSocket.getLocalPort());
+        logger.info("Server started on port " + serverSocket.getLocalPort());
         while (true) {
             Socket socket = serverSocket.accept();
             new Thread(() -> {
@@ -66,51 +73,64 @@ public class RenderServer {
         }
     }
 
+    // Log method that includes client IP in the log message
+    private void log(String clientIp, String message) {
+        logger.info("[" + clientIp + "] " + message);
+    }
+
     private void handleSocket(Socket socket) throws IOException {
         Map.Entry<Integer, TaskState> entry = null;
+        String clientIp = socket.getInetAddress().toString();
+
         try {
-            System.out.println("Client " + socket.getInetAddress() + " connected");
+            log(clientIp, "Client connected");
             ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 
             // Send config to client
-            System.out.println("Sending configuration");
+            log(clientIp, "Sending configuration");
             oos.writeObject(configuration);
             oos.flush();
 
             // Send reference orbit to client
-            System.out.println("Sending reference data");
+            log(clientIp, "Sending reference data");
             RenderManager.writeRef(mandelbrot.getRef(), oos);
             oos.flush();
 
             BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_BGR);
             while (true) {
                 // Find the first pending task
-                entry = state.entrySet().stream().filter(e -> e.getValue() == TaskState.PENDING).findFirst()
+                entry = state.entrySet().stream()
+                        .filter(e -> e.getValue() == TaskState.PENDING)
+                        .findFirst()
                         .orElse(null);
                 if (entry != null) {
                     entry.setValue(TaskState.PROCESSING);
 
-                    System.out.println("Sending frame number " + entry.getKey());
+                    log(clientIp, "Sending frame number " + entry.getKey());
                     oos.writeInt(entry.getKey());
                     oos.flush();
 
                     IterationMap iterationMap = IterationMap.read(ois);
-                    System.out.println("Received frame " + entry.getKey() + " from client " + socket.getInetAddress());
+                    log(clientIp, "Received frame " + entry.getKey());
 
                     colorizer.paint(iterationMap, image);
                     ImageIO.write(image, "png", configuration.createFile(String.format("%08d.png", entry.getKey())));
 
                     entry.setValue(TaskState.COMPLETED);
+                } else {
+                    oos.writeInt(-1);
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            // set state to pending
-            entry.setValue(TaskState.PENDING);
+            // Set state to pending
+            if (entry != null) {
+                entry.setValue(TaskState.PENDING);
+            }
+            log(clientIp, "Error occurred: " + e.getMessage());
         } finally {
             socket.close();
-            System.out.println("Client " + socket.getInetAddress() + " disconnected");
+            log(clientIp, "Client disconnected");
         }
     }
 

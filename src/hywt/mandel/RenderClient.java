@@ -10,45 +10,66 @@ import java.net.Socket;
 import java.util.List;
 
 public class RenderClient {
-    private Socket socket;
+    private InetAddress address;
+    private int port;
+
     public RenderClient(InetAddress address, int port) {
-        try {
-            socket = new Socket(address, port);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.address = address;
+        this.port = port;
     }
 
     public void start() {
-        try {
-            System.out.println("Connected to server");
-            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+        while (true) {
+            Socket socket = null;
+            try {
+                socket = new Socket(address, port);
+                System.out.println("Connected to server");
+                ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+                ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 
-            System.out.println("Waiting for configuration");
-            Configuration config = (Configuration) ois.readObject();
+                System.out.println("Waiting for configuration");
+                Configuration config = (Configuration) ois.readObject();
 
-            Mandelbrot mandelbrot = new Mandelbrot(config.getParameter());
+                Mandelbrot mandelbrot = new Mandelbrot(config.getParameter());
 
-            System.out.println("Reading reference data");
-            List<FloatExpComplex> ref = RenderManager.readRef(ois);
-            mandelbrot.setRef(ref);
+                System.out.println("Reading reference data");
+                List<FloatExpComplex> ref = RenderManager.readRef(ois);
+                mandelbrot.setRef(ref);
 
-            IterationMap iterationMap = new IterationMap(1920, 1080);
+                IterationMap iterationMap = new IterationMap(1920, 1080);
 
-            while (true) {
-                System.out.println("Waiting for frame number");
-                int frameNumber = ois.readInt();
+                while (true) {
+                    System.out.println("Waiting for frame number");
+                    int frameNumber = ois.readInt();
 
-                mandelbrot.setZoomOrd(frameNumber);
-                System.out.println("Rendering frame " + frameNumber + " with scale " + mandelbrot.getScale());
-                mandelbrot.render(iterationMap);
-                iterationMap.write(oos);
+                    if (frameNumber == -1) {
+                        System.out.println("No more frames to render");
+                        return;
+                    }
+                    mandelbrot.setZoomOrd(frameNumber);
+                    System.out.println("Rendering frame " + frameNumber + " with scale " + mandelbrot.getScale());
+                    mandelbrot.render(iterationMap);
+                    iterationMap.write(oos);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    if (socket != null)
+                        socket.close();
+                } catch (IOException e) {
+                    
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            System.out.println("Reconnecting in 5 seconds");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
     }
 }

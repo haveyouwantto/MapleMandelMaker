@@ -49,7 +49,7 @@ public class Mandelbrot {
         ref.clear();
         ref.add(z);
 
-        int reportInterval = Math.max(1, 2000000 / -this.scale.getExp());
+        int reportInterval = Math.max(1, 2000000 / Math.max(-this.scale.getExp(), 10));
 
         for (int i = 0; i < this.maxIter; i++) {
             dzdc = z.add(z).mulMut(dzdc).addMut(one);
@@ -65,6 +65,7 @@ public class Mandelbrot {
         }
 
         refVaild = true;
+        maxIter = ref.size() * 256L;
     }
 
     private List<List<BLA>> createBLATable(List<Complex> ref, double scale) {
@@ -387,8 +388,8 @@ public class Mandelbrot {
         double baseStep = 1d / min;
         double deltaX = (x - w / 2.0) * baseStep;
         double deltaY = (h / 2.0 - y) * baseStep;
-        if (deltaX ==0) deltaX += 0.0000000001;
-        if (deltaY==0) deltaY +=0.0000000001;
+        if (deltaX == 0) deltaX += 0.0000000001;
+        if (deltaY == 0) deltaY += 0.0000000001;
         return new FloatExpComplex(scale.mul(deltaX), scale.mul(deltaY));
     }
 
@@ -430,7 +431,7 @@ public class Mandelbrot {
 
         for (int y = 0; y < height; y += 2) {
             int finalY = y;
-            futures.add(service.submit(()->{
+            futures.add(service.submit(() -> {
                 for (int x = 0; x < width; x += 2) {
                     map.setPixel(x, finalY, getIter(x, finalY, width, height, isDeep));
                 }
@@ -450,18 +451,18 @@ public class Mandelbrot {
 
         for (int y = 0; y < height; y += 2) {
             int finalY = y;
-            futures.add(service.submit(()->{
-            for (int x = 1; x < width; x += 2) {
-                if (finalY < height - 1 && x < width - 1) {
-                    double left = map.getPixel(x - 1, finalY);
-                    double right = map.getPixel(x + 1, finalY);
-                    if (Math.floor(left) == Math.floor(right)) {
-                        map.setPixel(x, finalY, (left + right) / 2);
-                        continue;
+            futures.add(service.submit(() -> {
+                for (int x = 1; x < width; x += 2) {
+                    if (finalY < height - 1 && x < width - 1) {
+                        double left = map.getPixel(x - 1, finalY);
+                        double right = map.getPixel(x + 1, finalY);
+                        if (Math.floor(left) == Math.floor(right)) {
+                            map.setPixel(x, finalY, (left + right) / 2);
+                            continue;
+                        }
                     }
+                    map.setPixel(x, finalY, getIter(x, finalY, width, height, isDeep));
                 }
-                map.setPixel(x, finalY, getIter(x, finalY, width, height, isDeep));
-            }
             }));
         }
 
@@ -478,25 +479,25 @@ public class Mandelbrot {
 
         for (int y = 1; y < height; y += 2) {
             int finalY = y;
-            futures.add(service.submit(()->{
-            for (int x = 0; x < width; x++) {
-                if (finalY < height - 1) {
-                    double up = map.getPixel(x, finalY - 1);
-                    double down = map.getPixel(x, finalY + 1);
-                    if (Math.floor(up) == Math.floor(down)) {
-                        map.setPixel(x, finalY, (up + down) / 2);
-                        continue;
+            futures.add(service.submit(() -> {
+                for (int x = 0; x < width; x++) {
+                    if (finalY < height - 1) {
+                        double up = map.getPixel(x, finalY - 1);
+                        double down = map.getPixel(x, finalY + 1);
+                        if (Math.floor(up) == Math.floor(down)) {
+                            map.setPixel(x, finalY, (up + down) / 2);
+                            continue;
+                        }
                     }
+                    map.setPixel(x, finalY, getIter(x, finalY, width, height, isDeep));
                 }
-                map.setPixel(x, finalY, getIter(x, finalY, width, height, isDeep));
-            }
             }));
         }
 
         for (Future<?> future : futures) {
             try {
                 future.get();
-                finished+=2;
+                finished += 2;
                 System.out.printf("%d / %d\r", finished, total);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
@@ -532,5 +533,6 @@ public class Mandelbrot {
 
     public void setZoomOrd(int n) {
         this.scale = this.parameter.getScale().mul(FloatExp.fromLog2(n));
+        if (this.scale.compareTo(new FloatExp(1, -20)) > 0) refVaild = false;
     }
 }
