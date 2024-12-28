@@ -1,9 +1,10 @@
 package hywt.mandel.numtype;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-public class DeepComplex {
+public class DeepComplex implements Serializable {
     private BigDecimal re;
     private BigDecimal im;
     private BigDecimal absValue;

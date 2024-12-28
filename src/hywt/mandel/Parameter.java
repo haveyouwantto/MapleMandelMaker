@@ -3,7 +3,9 @@ package hywt.mandel;
 import hywt.mandel.numtype.DeepComplex;
 import hywt.mandel.numtype.FloatExp;
 
-public class Parameter {
+import java.io.Serializable;
+
+public class Parameter implements Serializable {
     private final DeepComplex center;
     private final FloatExp scale;
     private final long maxIter;

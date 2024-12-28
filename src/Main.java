@@ -1,21 +1,29 @@
 import hywt.mandel.*;
-import hywt.mandel.numtype.DeepComplex;
-import hywt.mandel.numtype.FloatExp;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        System.out.println(Arrays.toString(args));
         if (args.length ==0){
-            RenderManager manager = RenderManager.load(new FileInputStream("config.prop"));
+            Configuration configuration = Configuration.load(new FileInputStream("config.prop"));
+            RenderManager manager = new RenderManager(configuration);
             manager.start();
-        } else if (args.length>=1) {
-            String mode = args[1];
+        } else if (args.length >= 1) {
+            String mode = args[0];
+            switch (mode) {
+                case "s":
+                    Configuration configuration = Configuration.load(new FileInputStream("config.prop"));
+                    new RenderServer(configuration);
+                    case "c":
+                    InetAddress address = InetAddress.getByName(args[1]);
+                    int port = Integer.parseInt(args[2]);
+                    new RenderClient(address, port).start();
+            }
         }
 
     }

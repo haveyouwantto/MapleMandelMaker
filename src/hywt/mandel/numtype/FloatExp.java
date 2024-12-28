@@ -1,8 +1,9 @@
 package hywt.mandel.numtype;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class FloatExp {
+public class FloatExp implements Serializable {
     private static final double LOG2_10 = Math.log(10) / Math.log(2);
     private static final double LOG10_2 = Math.log(2) / Math.log(10);
     private static double[] expTable;

@@ -1,6 +1,8 @@
 package hywt.mandel.numtype;
 
-public class FloatExpComplex {
+import java.io.Serializable;
+
+public class FloatExpComplex implements Serializable {
     private FloatExp re;
     private FloatExp im;
 
