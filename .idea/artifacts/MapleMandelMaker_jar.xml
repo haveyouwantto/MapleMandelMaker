@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="MapleMandelMaker:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/MapleMandelMaker_jar</output-path>
+    <root id="archive" name="MapleMandelMaker.jar">
+      <element id="module-output" name="MapleMandelMaker" />
+    </root>
+  </artifact>
+</component>

@@ -25,4 +25,13 @@ public class Parameter {
     public long getMaxIter() {
         return maxIter;
     }
+
+    @Override
+    public String toString() {
+        return "Parameter{" +
+                "center=" + center +
+                ", scale=" + scale +
+                ", maxIter=" + maxIter +
+                '}';
+    }
 }

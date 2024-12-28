@@ -1,11 +1,13 @@
 package hywt.mandel;
 
+import hywt.mandel.numtype.DeepComplex;
 import hywt.mandel.numtype.FloatExp;
 import hywt.mandel.numtype.FloatExpComplex;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -31,22 +33,23 @@ public class RenderManager {
         if (refFile.exists()) {
             List<FloatExpComplex> ref = readRef(new GZIPInputStream(new FileInputStream(refFile)));
             mandelbrot.setRef(ref);
+            System.out.println("Loaded reference");
         } else {
             List<FloatExpComplex> ref = mandelbrot.getRef();
-            writeRef(ref,new GZIPOutputStream(new FileOutputStream(refFile)));
+            writeRef(ref, new GZIPOutputStream(new FileOutputStream(refFile)));
         }
 
         int i = 0;
         while (mandelbrot.getScale().doubleValue() < 16) {
-            System.out.println(mandelbrot.getScale());
             File outFile = config.createFile(String.format("%08d.png", i++));
             if (!outFile.exists()) {
+                System.out.printf("Frame %d: %s\n", i, mandelbrot.getScale());
+                mandelbrot.setZoomOrd(i);
                 mandelbrot.render(iterationMap);
                 colorizer.paint(iterationMap, image);
                 ImageIO.write(image, "png", outFile);
             }
 
-            mandelbrot.zoomOut();
         }
     }
 
@@ -71,8 +74,7 @@ public class RenderManager {
             int imExp = dis.readInt();
             ref.add(new FloatExpComplex(
                     new FloatExp(reMant, reExp),
-                    new FloatExp(imMant, imExp)
-            ));
+                    new FloatExp(imMant, imExp)));
         }
         is.close();
         return ref;
@@ -81,11 +83,24 @@ public class RenderManager {
     public void save() throws IOException {
         File file = config.createFile("config.prop");
         Properties prop = new Properties();
-        prop.setProperty("re", config.getParameter().getCenter().getRe().toString());
-        prop.setProperty("im", config.getParameter().getCenter().getIm().toString());
-        prop.setProperty("scale", config.getParameter().getScale().toString());
+        prop.setProperty("real", config.getParameter().getCenter().getRe().toString());
+        prop.setProperty("imaginary", config.getParameter().getCenter().getIm().toString());
+        prop.setProperty("zoom", new FloatExp(4).div(config.getParameter().getScale()).toString());
         prop.setProperty("iterations", String.valueOf(config.getParameter().getMaxIter()));
         prop.setProperty("path", config.getOutputDir().toString());
         prop.store(new FileOutputStream(file), "");
+    }
+
+    public static RenderManager load(InputStream is) throws IOException {
+        Properties prop = new Properties();
+        prop.load(is);
+
+        BigDecimal re = new BigDecimal(prop.getProperty("real"));
+        BigDecimal im = new BigDecimal(prop.getProperty("imaginary"));
+        FloatExp scale = new FloatExp(4).div(FloatExp.parseFloatExp(prop.getProperty("zoom")));
+        long maxIter = Long.parseLong(prop.getProperty("iterations"));
+        Parameter p = new Parameter(new DeepComplex(re, im), scale, maxIter);
+        Configuration config = new Configuration(p, new File(prop.getProperty("path")));
+        return new RenderManager(config);
     }
 }

@@ -90,8 +90,9 @@ public class FloatExpComplex {
     }
 
     public FloatExp norm() {
-        if (re.compareTo(im) > 0) return re.abs();
-        else return im.abs();
+        return re.abs().addMut(im.abs());
+//        if (re.compareTo(im) > 0) return re.abs();
+//        else return im.abs();
     }
 
     public FloatExp getRe() {

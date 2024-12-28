@@ -12,7 +12,7 @@ public class BasicEscapeColorizer implements Colorizer {
     public void paint(IterationMap iterMap, BufferedImage image) {
         for (int y = 0; y < image.getHeight(); y++) {
             for (int x = 0; x < image.getWidth(); x++) {
-                image.setRGB(x, y, Palette.getColor(palette, iterMap.getPixel(x, y)).getRGB());
+                image.setRGB(x, y, Palette.getColor(palette, iterMap.getPixel(x, y), iterMap.getMaxIter()).getRGB());
             }
         }
     }

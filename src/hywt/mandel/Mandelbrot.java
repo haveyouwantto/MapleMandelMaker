@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Mandelbrot {
+    private Parameter parameter;
     private DeepComplex center;
     private FloatExp scale;
     private long maxIter;
@@ -24,25 +25,19 @@ public class Mandelbrot {
 
     private ExecutorService service;
 
-    public Mandelbrot(DeepComplex center, FloatExp scale, long maxIter, double bailout) {
-        this.center = center;
-        this.scale = scale;
-        this.maxIter = maxIter;
-        this.bailout = bailout * bailout;
+    public Mandelbrot(Parameter p) {
+        this.parameter = p;
+        this.center = p.getCenter();
+        this.scale = p.getScale();
+        this.maxIter = p.getMaxIter();
+        this.bailout = 4;
         ref = new ArrayList<>();
         refVaild = false;
 
         int threads = Runtime.getRuntime().availableProcessors();
-        service = Executors.newFixedThreadPool(6);
+        service = Executors.newFixedThreadPool(threads);
     }
 
-    public Mandelbrot(DeepComplex center, FloatExp scale) {
-        this(center, scale, 256, 4);
-    }
-
-    public Mandelbrot(Parameter p) {
-        this(p.getCenter(), p.getScale(), p.getMaxIter(), 4);
-    }
 
     private void getReferenceOrbit() {
         int precision = -scale.scale() + 10;
@@ -54,6 +49,8 @@ public class Mandelbrot {
         ref.clear();
         ref.add(z);
 
+        int reportInterval = Math.max(1, 2000000 / -this.scale.getExp());
+
         for (int i = 0; i < this.maxIter; i++) {
             dzdc = z.add(z).mulMut(dzdc).addMut(one);
             Z = Z.mul(Z).add(this.center);
@@ -64,7 +61,10 @@ public class Mandelbrot {
             if (dzdc.norm().mul(this.scale).mul(2).compareTo(z.norm()) > 0) break;
             if (z.norm().doubleValue() > 16.0) break;
 
+            if (i % reportInterval == 0) System.out.printf("%d\r", i);
         }
+
+        refVaild = true;
     }
 
     private List<List<BLA>> createBLATable(List<Complex> ref, double scale) {
@@ -338,9 +338,9 @@ public class Mandelbrot {
                 refIter++;
             }
             if (refIter >= ref.size()) return new PTBLAFEResult(iter, true, null, refIter);
-            if (dz.getRe().scale() > -75 && dz.getIm().scale() > -75) {
-                return new PTBLAFEResult(iter, false, dz.toComplex(), refIter);
-            }
+//            if (dz.getRe().scale() > -150 && dz.getIm().scale() > -150) {
+//                return new PTBLAFEResult(iter, false, dz.toComplex(), refIter);
+//            }
 
             FloatExpComplex Z2 = ref.get(refIter);
             FloatExpComplex val = Z2.add(dz);
@@ -409,12 +409,7 @@ public class Mandelbrot {
     }
 
     public void render(IterationMap map) {
-        if(!refVaild) {
-            System.out.println("Reference");
-            getReferenceOrbit();
-            refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
-            refVaild = true;
-        }
+        getRef();
 
         tableComplex = createBLATable(refComplex, this.scale.doubleValue());
 
@@ -428,6 +423,11 @@ public class Mandelbrot {
 
         List<Future<?>> futures = new ArrayList<>();
 
+        int total = height * 2;
+        int finished = 0;
+
+        map.setMaxIter(maxIter);
+
         for (int y = 0; y < height; y += 2) {
             int finalY = y;
             futures.add(service.submit(()->{
@@ -440,6 +440,8 @@ public class Mandelbrot {
         for (Future<?> future : futures) {
             try {
                 future.get();
+                finished++;
+                System.out.printf("%d / %d\r", finished, total);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -466,6 +468,8 @@ public class Mandelbrot {
         for (Future<?> future : futures) {
             try {
                 future.get();
+                finished++;
+                System.out.printf("%d / %d\r", finished, total);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -492,6 +496,8 @@ public class Mandelbrot {
         for (Future<?> future : futures) {
             try {
                 future.get();
+                finished+=2;
+                System.out.printf("%d / %d\r", finished, total);
             } catch (InterruptedException | ExecutionException e) {
                 throw new RuntimeException(e);
             }
@@ -501,7 +507,7 @@ public class Mandelbrot {
 
     }
 
-    public void zoomOut(){
+    public void zoomOut() {
         this.scale.mulMut(new FloatExp(2));
     }
 
@@ -510,7 +516,11 @@ public class Mandelbrot {
     }
 
     public List<FloatExpComplex> getRef() {
-        if (!refVaild) getReferenceOrbit();
+        if (!refVaild) {
+            System.out.println("Computing reference...");
+            getReferenceOrbit();
+            refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+        }
         return ref;
     }
 
@@ -518,5 +528,9 @@ public class Mandelbrot {
         this.ref = ref;
         refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
         refVaild = true;
+    }
+
+    public void setZoomOrd(int n) {
+        this.scale = this.parameter.getScale().mul(FloatExp.fromLog2(n));
     }
 }

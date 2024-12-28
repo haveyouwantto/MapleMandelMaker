@@ -42,8 +42,8 @@ public class Palette {
         return new double[]{r, g, b};
     }
 
-    public static Color getColor(int[][] palette, double it) {
-        if (it == -1) {
+    public static Color getColor(int[][] palette, double it, long maxIter) {
+        if (it == -1 || it >= maxIter) {
             return Color.BLACK;
         } else if (it <= 0) return new Color(palette[0][0], palette[0][1], palette[0][2]);
         double[] color = colorTrans(palette, it / 6.0);
