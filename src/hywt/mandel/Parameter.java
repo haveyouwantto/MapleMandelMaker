@@ -2,21 +2,22 @@ package hywt.mandel;
 
 import hywt.mandel.numtype.DeepComplex;
 import hywt.mandel.numtype.FloatExp;
+import org.apfloat.Apcomplex;
 
 import java.io.Serializable;
 
 public class Parameter implements Serializable {
-    private final DeepComplex center;
+    private final Apcomplex center;
     private final FloatExp scale;
     private final long maxIter;
 
-    public Parameter(DeepComplex center, FloatExp scale, long maxIter) {
+    public Parameter(Apcomplex center, FloatExp scale, long maxIter) {
         this.center = center;
         this.scale = scale;
         this.maxIter = maxIter;
     }
 
-    public DeepComplex getCenter() {
+    public Apcomplex getCenter() {
         return center;
     }
 

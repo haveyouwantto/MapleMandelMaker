@@ -39,7 +39,7 @@ public class RenderClient {
                 IterationMap iterationMap = new IterationMap(1920, 1080);
 
                 while (true) {
-                    System.out.println("Waiting for frame number");
+                    System.out.printf("Waiting for frame number\r");
                     int frameNumber = ois.readInt();
 
                     if (frameNumber == -1) {

@@ -3,6 +3,7 @@
     <output-path>$PROJECT_DIR$/out/artifacts/MapleMandelMaker_jar</output-path>
     <root id="archive" name="MapleMandelMaker.jar">
       <element id="module-output" name="MapleMandelMaker" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/apfloat.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

@@ -1,5 +1,7 @@
 package hywt.mandel.numtype;
 
+import org.apfloat.Apcomplex;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -24,6 +26,14 @@ public class DeepComplex implements Serializable {
     public DeepComplex setPrecision(int precision) {
         this.mc = new MathContext(precision);
         return this;
+    }
+
+    public DeepComplex square() {
+        return new DeepComplex(
+                re.multiply(re, mc).subtract(im.multiply(im, mc), mc),
+                re.multiply(im, mc).multiply(new BigDecimal(2), mc))
+                .setPrecision(mc.getPrecision()
+                );
     }
 
     public BigDecimal abs() {

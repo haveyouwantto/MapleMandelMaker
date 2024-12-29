@@ -2,6 +2,8 @@ package hywt.mandel;
 
 import hywt.mandel.numtype.DeepComplex;
 import hywt.mandel.numtype.FloatExp;
+import org.apfloat.Apcomplex;
+import org.apfloat.Apfloat;
 
 import java.io.*;
 import java.math.BigDecimal;
@@ -26,7 +28,7 @@ public class Configuration implements Serializable {
         BigDecimal im = new BigDecimal(prop.getProperty("imaginary"));
         FloatExp scale = new FloatExp(4).div(FloatExp.parseFloatExp(prop.getProperty("zoom")));
         long maxIter = Long.parseLong(prop.getProperty("iterations"));
-        Parameter p = new Parameter(new DeepComplex(re, im), scale, maxIter);
+        Parameter p = new Parameter(new Apcomplex(new Apfloat(re), new Apfloat(im)), scale, maxIter);
         return new Configuration(p, new File(prop.getProperty("path")));
     }
 
@@ -44,8 +46,8 @@ public class Configuration implements Serializable {
 
     public void save(OutputStream os) throws IOException {
         Properties prop = new Properties();
-        prop.setProperty("real", parameter.getCenter().getRe().toString());
-        prop.setProperty("imaginary", parameter.getCenter().getIm().toString());
+        prop.setProperty("real", parameter.getCenter().real().toString());
+        prop.setProperty("imaginary", parameter.getCenter().imag().toString());
         prop.setProperty("zoom", new FloatExp(4).div(parameter.getScale()).toString());
         prop.setProperty("iterations", String.valueOf(parameter.getMaxIter()));
         prop.setProperty("path", outputDir.toString());

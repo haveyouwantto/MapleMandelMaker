@@ -28,17 +28,21 @@ public class RenderManager {
 
         File refFile = config.createFile("ref.dat");
         if (refFile.exists()) {
-            List<FloatExpComplex> ref = readRef(new GZIPInputStream(new FileInputStream(refFile)));
+            InputStream is = new GZIPInputStream(new FileInputStream(refFile));
+            List<FloatExpComplex> ref = readRef(is);
             mandelbrot.setRef(ref);
             System.out.println("Loaded reference");
+            is.close();
         } else {
             List<FloatExpComplex> ref = mandelbrot.getRef();
-            writeRef(ref, new GZIPOutputStream(new FileOutputStream(refFile)));
+            OutputStream os =  new GZIPOutputStream(new FileOutputStream(refFile));
+            writeRef(ref, os);
+            os.close();
         }
 
         int i = 0;
         while (mandelbrot.getScale().doubleValue() < 16) {
-            File outFile = config.createFile(String.format("%08d.png", i++));
+            File outFile = config.createFile(String.format("%08d.png", i));
             if (!outFile.exists()) {
                 System.out.printf("Frame %d: %s\n", i, mandelbrot.getScale());
                 mandelbrot.setZoomOrd(i);
@@ -46,6 +50,8 @@ public class RenderManager {
                 colorizer.paint(iterationMap, image);
                 ImageIO.write(image, "png", outFile);
             }
+
+            i++;
 
         }
     }

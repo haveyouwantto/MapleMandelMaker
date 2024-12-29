@@ -1,6 +1,8 @@
 package hywt.mandel;
 
 import hywt.mandel.numtype.*;
+import org.apfloat.Apcomplex;
+import org.apfloat.Apfloat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.concurrent.Future;
 
 public class Mandelbrot {
     private Parameter parameter;
-    private DeepComplex center;
+    private Apcomplex center;
     private FloatExp scale;
     private long maxIter;
     private double bailout;
@@ -41,7 +43,7 @@ public class Mandelbrot {
 
     private void getReferenceOrbit() {
         int precision = -scale.scale() + 10;
-        var Z = new DeepComplex(0, 0).setPrecision(precision);
+        var Z = new Apcomplex("0").precision(precision);
         var z = new FloatExpComplex(0, 0);
         var dzdc = new FloatExpComplex(1, 0);
         var one = new FloatExpComplex(1, 0);
@@ -53,9 +55,10 @@ public class Mandelbrot {
 
         for (int i = 0; i < this.maxIter; i++) {
             dzdc = z.add(z).mulMut(dzdc).addMut(one);
-            Z = Z.mul(Z).add(this.center);
 
-            z = Z.toFloatExp();
+            Z = Z.multiply(Z).add(this.center).precision(precision);
+
+            z = Ap2FExp.apc2fec(Z);
             ref.add(z);
 
             if (dzdc.norm().mul(this.scale).mul(2).compareTo(z.norm()) > 0) break;
