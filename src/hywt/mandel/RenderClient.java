@@ -36,7 +36,7 @@ public class RenderClient {
                 List<FloatExpComplex> ref = RenderManager.readRef(ois);
                 mandelbrot.setRef(ref);
 
-                IterationMap iterationMap = new IterationMap(1920, 1080);
+                IterationMap iterationMap = new IterationMap(config.getWidth(), config.getHeight());
 
                 while (true) {
                     System.out.printf("Waiting for frame number\r");

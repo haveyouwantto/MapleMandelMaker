@@ -23,8 +23,8 @@ public class RenderManager {
     public void start() throws IOException {
         Colorizer colorizer = new BasicEscapeColorizer();
 
-        IterationMap iterationMap = new IterationMap(1920, 1080);
-        BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_BGR);
+        IterationMap iterationMap = new IterationMap(config.getWidth(), config.getHeight());
+        BufferedImage image = new BufferedImage(config.getWidth(), config.getHeight(), BufferedImage.TYPE_INT_BGR);
 
         File refFile = config.createFile("ref.dat");
         if (refFile.exists()) {
@@ -40,7 +40,7 @@ public class RenderManager {
             os.close();
         }
 
-        int i = 0;
+        int i = config.getStart();
         while (mandelbrot.getScale().doubleValue() < 16) {
             File outFile = config.createFile(String.format("%08d.jpg", i));
             if (!outFile.exists()) {

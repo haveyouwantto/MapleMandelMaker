@@ -42,7 +42,7 @@ public class RenderServer {
         double startValue = config.getParameter().getScale().log2Value();
         double finishScale = new FloatExp(16).log2Value();
 
-        for (int i = 0; i < finishScale - startValue; i++) {
+        for (int i = config.getStart(); i < finishScale - startValue; i++) {
             File file = config.createFile(String.format("%08d.png", i));
             state.put(i, file.exists() ? TaskState.COMPLETED : TaskState.PENDING);
         }
@@ -97,7 +97,7 @@ public class RenderServer {
             RenderManager.writeRef(mandelbrot.getRef(), oos);
             oos.flush();
 
-            BufferedImage image = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_BGR);
+            BufferedImage image = new BufferedImage(configuration.getWidth(), configuration.getHeight(), BufferedImage.TYPE_INT_BGR);
             while (true) {
                 // Find the first pending task
                 entry = state.entrySet().stream()
@@ -123,7 +123,7 @@ public class RenderServer {
                     mapOut.close();
 
                     colorizer.paint(iterationMap, image);
-                    ImageIO.write(image, "png", configuration.createFile(String.format("%08d.png", entry.getKey())));
+                    ImageIO.write(image, "jpg", configuration.createFile(String.format("%08d.jpg", entry.getKey())));
 
                     entry.setValue(TaskState.COMPLETED);
                 } else {

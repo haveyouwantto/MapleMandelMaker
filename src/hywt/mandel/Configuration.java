@@ -12,6 +12,9 @@ import java.util.Properties;
 public class Configuration implements Serializable {
     private Parameter parameter;
     private File outputDir;
+    private int width;
+    private int height;
+    private int start;
 
     public final static long serialVersionUID = 1L;
 
@@ -29,7 +32,11 @@ public class Configuration implements Serializable {
         FloatExp scale = new FloatExp(4).div(FloatExp.parseFloatExp(prop.getProperty("zoom")));
         long maxIter = Long.parseLong(prop.getProperty("iterations"));
         Parameter p = new Parameter(new Apcomplex(new Apfloat(re), new Apfloat(im)), scale, maxIter);
-        return new Configuration(p, new File(prop.getProperty("path")));
+        Configuration c = new Configuration(p, new File(prop.getProperty("path")));
+        c.width = Integer.parseInt(prop.getProperty("width", "1920"));
+        c.height = Integer.parseInt(prop.getProperty("height", "1080"));
+        c.start = Integer.parseInt(prop.getProperty("start", "0"));
+        return c;
     }
 
     public File createFile(String name){
@@ -53,5 +60,17 @@ public class Configuration implements Serializable {
         prop.setProperty("path", outputDir.toString());
         prop.store(os, "MapleMandelMaker Config");
         os.close();
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getStart() {
+        return start;
     }
 }
