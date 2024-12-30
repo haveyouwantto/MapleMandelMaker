@@ -42,10 +42,17 @@ public class RenderServer {
         double startValue = config.getParameter().getScale().log2Value();
         double finishScale = new FloatExp(16).log2Value();
 
+        int completed = 0;
         for (int i = config.getStart(); i < finishScale - startValue; i++) {
-            File file = config.createFile(String.format("%08d.png", i));
-            state.put(i, file.exists() ? TaskState.COMPLETED : TaskState.PENDING);
+            File file = config.createFile(String.format("%08d.imp", i));
+            if (file.exists()){
+                state.put(i,TaskState.COMPLETED );
+                completed++;
+            }else{
+                state.put(i,TaskState.PENDING );
+            }
         }
+        logger.info(String.format("Total frames = %d, rendered = %d", state.size(), completed));
 
         File refFile = config.createFile("ref.dat");
         if (refFile.exists()) {

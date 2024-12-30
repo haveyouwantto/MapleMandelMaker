@@ -38,6 +38,9 @@ public class Mandelbrot {
 
         int threads = Runtime.getRuntime().availableProcessors();
         service = Executors.newFixedThreadPool(threads);
+
+        table = new ArrayList<>();
+        tableComplex = new ArrayList<>();
     }
 
 
@@ -72,9 +75,9 @@ public class Mandelbrot {
     }
 
     private List<List<BLA>> createBLATable(List<Complex> ref, double scale) {
-        List<List<BLA>> table = new ArrayList<>();
+        tableComplex.clear();
         List<BLA> lv1 = new ArrayList<>();
-        table.add(lv1);
+        tableComplex.add(lv1);
 
         for (int i = 1; i < ref.size(); i++) {
             Complex point = ref.get(i);
@@ -89,9 +92,9 @@ public class Mandelbrot {
         int level = 1;
         while (true) {
             List<BLA> currentLevel = new ArrayList<>();
-            table.add(currentLevel);
+            tableComplex.add(currentLevel);
 
-            List<BLA> previousLevel = table.get(level - 1);
+            List<BLA> previousLevel = tableComplex.get(level - 1);
 
             for (int i = 0; i < previousLevel.size(); i += 2) {
                 BLA bla1 = previousLevel.get(i);
@@ -119,7 +122,7 @@ public class Mandelbrot {
             level++;
         }
 
-        return table;
+        return tableComplex;
     }
 
     public static class LookupResult {
@@ -230,9 +233,9 @@ public class Mandelbrot {
         return iter;
     }
 
-    public static List<List<BLAFE>> createBLATableFE(List<FloatExpComplex> ref, FloatExp scale) {
+    public List<List<BLAFE>> createBLATableFE(List<FloatExpComplex> ref, FloatExp scale) {
         List<BLAFE> lv1 = new ArrayList<>();
-        List<List<BLAFE>> table = new ArrayList<>();
+        table.clear();
         table.add(lv1);
 
         for (int i = 1; i < ref.size(); i++) {
@@ -415,14 +418,14 @@ public class Mandelbrot {
     public void render(IterationMap map) {
         getRef();
 
-        tableComplex = createBLATable(refComplex, this.scale.doubleValue());
-
         int width = map.getWidth();
         int height = map.getHeight();
 
-        boolean isDeep = this.scale.scale() < -300;
+        boolean isDeep = isDeep();
         if (isDeep) {
-            table = createBLATableFE(ref, this.scale);
+            createBLATableFE(ref, this.scale);
+        } else {
+            createBLATable(refComplex, this.scale.doubleValue());
         }
 
         List<Future<?>> futures = new ArrayList<>();
@@ -511,6 +514,10 @@ public class Mandelbrot {
 
     }
 
+    private boolean isDeep() {
+        return this.scale.scale() < -300;
+    }
+
     public void zoomOut() {
         this.scale.mulMut(new FloatExp(2));
     }
@@ -523,14 +530,14 @@ public class Mandelbrot {
         if (!refVaild) {
             System.out.println("Computing reference...");
             getReferenceOrbit();
-            refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
         }
+        if(!isDeep()) refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
         return ref;
     }
 
     protected void setRef(List<FloatExpComplex> ref) {
         this.ref = ref;
-        refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+        if(!isDeep()) refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
         refVaild = true;
     }
 
