@@ -11,13 +11,6 @@ import java.util.zip.GZIPInputStream;
 public class Main {
     public static void main(String[] args) throws IOException {
         System.out.println(Arrays.toString(args));
-        IterationMap it = IterationMap.read(new GZIPInputStream(new FileInputStream("mmm_out/00000000.imp")));
-
-        Colorizer c = new BasicEscapeColorizer();
-        BufferedImage bim = new BufferedImage(it.getWidth(),it.getHeight(),BufferedImage.TYPE_3BYTE_BGR);
-        c.paint(it, bim);
-        ImageIO.write(bim,"png", new File("out.png"));
-        System.out.println(it.getPixel(0,5));
 
         if (args.length ==0){
             Configuration configuration = Configuration.load(new FileInputStream("config.prop"));

@@ -45,18 +45,24 @@ public class IterationMap {
 
         VLELongOutputStream vle = new VLELongOutputStream(new BufferedOutputStream(dos));
 
+        long prev = 0;
+
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
                 double itF = getPixel(x,y);
+
                 long it = (long) itF;
+                long diff = it - prev;
+                prev = it;
+
                 double phase = itF - it;
                 int phaseQuant = (int) (phase * 255);
-                vle.writeLong(it);
+                vle.writeLong(diff);
                 vle.write(phaseQuant);
             }
         }
 
-        dos.flush();
+        vle.flush();
     }
 
     // Read the object from an InputStream
@@ -71,11 +77,15 @@ public class IterationMap {
 
         VLELongInputStream vle = new VLELongInputStream(new BufferedInputStream(dis));
 
+        long prev = 0;
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 long it = vle.readLong();
                 double phase = vle.read() / 255.0;
-                iterationMap.setPixel(x, y, it + phase);
+
+                prev += it;
+                iterationMap.setPixel(x, y, prev + phase);
             }
         }
 

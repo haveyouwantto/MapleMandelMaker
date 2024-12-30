@@ -44,8 +44,8 @@ public class RenderManager {
         while (mandelbrot.getScale().doubleValue() < 16) {
             File outFile = config.createFile(String.format("%08d.jpg", i));
             if (!outFile.exists()) {
-                System.out.printf("Frame %d: %s\n", i, mandelbrot.getScale());
                 mandelbrot.setZoomOrd(i);
+                System.out.printf("Frame %d: %s\n", i, mandelbrot.getScale());
                 mandelbrot.render(iterationMap);
                 OutputStream mapOut = new GZIPOutputStream(
                         new FileOutputStream(

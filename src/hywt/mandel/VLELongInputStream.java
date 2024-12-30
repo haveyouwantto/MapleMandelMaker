@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * VLELongInputStream decodes long values encoded using variable-length encoding (1-9 bytes)
- * from the underlying InputStream.
+ * VLELongInputStream decodes long values encoded using variable-length encoding (1-9 bytes),
+ * where the 7th bit of the first byte is used as the sign bit, from the underlying InputStream.
  */
 public class VLELongInputStream extends FilterInputStream {
 
@@ -21,11 +21,18 @@ public class VLELongInputStream extends FilterInputStream {
      * @throws IOException if an I/O error occurs or if the encoding is invalid.
      */
     public long readLong() throws IOException {
-        long result = 0;
-        int shift = 0;
-        int b;
+        int b = in.read();
+        if (b == -1) {
+            throw new IOException("Unexpected end of stream while decoding long.");
+        }
 
-        do {
+        // Determine the sign from the 7th bit of the first byte
+        boolean isNegative = (b & 0x40) != 0;
+        long result = b & 0x3F; // Extract the lower 6 bits for the magnitude
+        int shift = 6;
+
+        // Read subsequent bytes
+        while ((b & 0x80) != 0) { // Check continuation bit
             b = in.read();
             if (b == -1) {
                 throw new IOException("Unexpected end of stream while decoding long.");
@@ -37,9 +44,10 @@ public class VLELongInputStream extends FilterInputStream {
             if (shift > 63) {
                 throw new IOException("Variable-length encoding is too long for a long value.");
             }
-        } while ((b & 0x80) != 0); // Continue if the continuation bit is set
+        }
 
-        return result;
+        // Apply the sign if the value is negative
+        return isNegative ? -result : result;
     }
 
     /**
@@ -51,5 +59,4 @@ public class VLELongInputStream extends FilterInputStream {
     public void close() throws IOException {
         super.close();
     }
-
 }

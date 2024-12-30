@@ -1,13 +1,12 @@
 package hywt.mandel;
 
 import java.io.FilterOutputStream;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * VLELongOutputStream encodes long values into a variable-length encoding (1-9 bytes)
- * and writes them to the underlying OutputStream.
+ * VLELongOutputStream encodes long values into a variable-length encoding (1-9 bytes),
+ * using the 7th bit of the first byte as the sign bit, and writes them to the underlying OutputStream.
  */
 public class VLELongOutputStream extends FilterOutputStream {
 
@@ -16,17 +15,36 @@ public class VLELongOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Encodes a long value using variable-length encoding and writes it to the stream.
+     * Encodes a long value using variable-length encoding with the 7th bit of the first byte
+     * as the sign bit and writes it to the stream.
      *
      * @param value the long value to encode and write.
      * @throws IOException if an I/O error occurs.
      */
     public void writeLong(long value) throws IOException {
-        while ((value & ~0x7FL) != 0) {
-            out.write((int) ((value & 0x7F) | 0x80)); // Write 7 bits and set the continuation bit
-            value >>>= 7; // Shift value to process the next 7 bits
+        boolean isNegative = value < 0;
+        long magnitude = Math.abs(value);
+
+        // Write the first byte with the sign bit
+        int firstByte = (int) (magnitude & 0x3F); // Take the least significant 6 bits
+        if (isNegative) {
+            firstByte |= 0x40; // Set the 7th bit for negative values
         }
-        out.write((int) value); // Write the final 7 bits without the continuation bit
+        if (magnitude >= 0x40) {
+            firstByte |= 0x80; // Set the continuation bit if there are more bytes
+        }
+        out.write(firstByte);
+        magnitude >>>= 6; // Shift by 6 bits for the next byte
+
+        // Write subsequent bytes
+        while (magnitude != 0) {
+            int nextByte = (int) (magnitude & 0x7F);
+            if ((magnitude >>> 7) != 0) {
+                nextByte |= 0x80; // Set the continuation bit
+            }
+            out.write(nextByte);
+            magnitude >>>= 7; // Shift by 7 bits for the next byte
+        }
     }
 
     /**
@@ -38,5 +56,4 @@ public class VLELongOutputStream extends FilterOutputStream {
     public void close() throws IOException {
         super.close();
     }
-
 }
