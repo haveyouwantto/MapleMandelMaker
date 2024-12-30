@@ -1,6 +1,7 @@
 package hywt.mandel;
 
 import java.io.*;
+import java.util.Arrays;
 
 public class IterationMap {
     private final double[][] map;
@@ -42,9 +43,16 @@ public class IterationMap {
         dos.writeInt(getHeight());
         dos.writeLong(maxIter);
 
+        VLELongOutputStream vle = new VLELongOutputStream(new BufferedOutputStream(dos));
+
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
-                dos.writeDouble(getPixel(x, y));
+                double itF = getPixel(x,y);
+                long it = (long) itF;
+                double phase = itF - it;
+                int phaseQuant = (int) (phase * 255);
+                vle.writeLong(it);
+                vle.write(phaseQuant);
             }
         }
 
@@ -61,12 +69,23 @@ public class IterationMap {
         IterationMap iterationMap = new IterationMap(width, height);
         iterationMap.maxIter = maxIter;
 
+        VLELongInputStream vle = new VLELongInputStream(new BufferedInputStream(dis));
+
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                iterationMap.setPixel(x, y, dis.readDouble());
+                long it = vle.readLong();
+                double phase = vle.read() / 255.0;
+                iterationMap.setPixel(x, y, it + phase);
             }
         }
 
         return iterationMap;
+    }
+
+    @Override
+    public String toString() {
+        return "IterationMap{" + getWidth() +"x"+getHeight()+
+                ", maxIter=" + maxIter +
+                '}';
     }
 }

@@ -114,6 +114,14 @@ public class RenderServer {
                     IterationMap iterationMap = IterationMap.read(ois);
                     log(clientIp, "Received frame " + entry.getKey());
 
+                    OutputStream mapOut = new GZIPOutputStream(
+                            new FileOutputStream(
+                                    configuration.createFile(String.format("%08d.imp", entry.getKey()))
+                            )
+                    );
+                    iterationMap.write(mapOut);
+                    mapOut.close();
+
                     colorizer.paint(iterationMap, image);
                     ImageIO.write(image, "png", configuration.createFile(String.format("%08d.png", entry.getKey())));
 
