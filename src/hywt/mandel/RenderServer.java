@@ -7,10 +7,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.logging.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -24,6 +21,7 @@ public class RenderServer {
     private Map<Integer, TaskState> state;
     private ServerSocket serverSocket;
     private Colorizer colorizer;
+    private Map<String, Integer> contributions;
 
     public RenderServer(Configuration config) throws IOException {
         // Logger setup (optional custom formatting)
@@ -68,6 +66,22 @@ public class RenderServer {
 
         serverSocket = new ServerSocket(47392);
         logger.info("Server started on port " + serverSocket.getLocalPort());
+
+        
+        contributions = new HashMap<>();
+        loadData();
+
+        // 添加关闭钩子，在程序终止时执行
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Stopping server...");
+            try {
+                saveData();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }));
+
         while (true) {
             Socket socket = serverSocket.accept();
             new Thread(() -> {
@@ -80,8 +94,34 @@ public class RenderServer {
         }
     }
 
+    private void saveData() throws IOException {
+        File contribFile = configuration.createFile("contrib.txt");
+        Properties prop = new Properties();
+        for (Map.Entry<String, Integer> entry : contributions.entrySet()) {
+            prop.setProperty(entry.getKey(), entry.getValue().toString());
+        }
+        try (FileOutputStream fos = new FileOutputStream(contribFile)){
+            prop.store(fos, "contrib record");
+        }
+    }
+
+    private void loadData() throws IOException {
+        File contribFile = configuration.createFile("contrib.txt");
+        if (!contribFile.exists()) {
+            return;
+        }
+        Properties prop = new Properties();
+        try (FileInputStream fis = new FileInputStream(contribFile)){
+            prop.load(fis);
+        }
+        for (String key : prop.stringPropertyNames()) {
+            contributions.put(key, Integer.parseInt(prop.getProperty(key)));
+        }
+    }
+
     // Log method that includes client IP in the log message
     private void log(String clientIp, String message) {
+        System.out.println(contributions);
         logger.info("[" + clientIp + "] " + message);
     }
 
@@ -119,6 +159,9 @@ public class RenderServer {
                     oos.flush();
 
                     IterationMap iterationMap = IterationMap.read(ois);
+                    contributions.putIfAbsent(clientIp, 0);
+                    contributions.put(clientIp, contributions.get(clientIp) + 1);
+                    Runtime.getRuntime().exec("clear");
                     log(clientIp, "Received frame " + entry.getKey());
 
                     OutputStream mapOut = new GZIPOutputStream(
