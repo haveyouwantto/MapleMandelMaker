@@ -28,6 +28,10 @@ public class Mandelbrot {
     private ExecutorService service;
 
     public Mandelbrot(Parameter p) {
+        this(p, -1);
+    }
+
+    public Mandelbrot(Parameter p, int thread) {
         this.parameter = p;
         this.center = p.getCenter();
         this.scale = p.getScale();
@@ -37,7 +41,7 @@ public class Mandelbrot {
         refVaild = false;
 
         int threads = Runtime.getRuntime().availableProcessors();
-        service = Executors.newFixedThreadPool(threads);
+        service = Executors.newFixedThreadPool(thread == -1 ? threads : 1);
 
         table = new ArrayList<>();
         tableComplex = new ArrayList<>();
@@ -422,11 +426,6 @@ public class Mandelbrot {
         int height = map.getHeight();
 
         boolean isDeep = isDeep();
-        if (isDeep) {
-            createBLATableFE(ref, this.scale);
-        } else {
-            createBLATable(refComplex, this.scale.doubleValue());
-        }
 
         List<Future<?>> futures = new ArrayList<>();
 
@@ -530,14 +529,22 @@ public class Mandelbrot {
         if (!refVaild) {
             System.out.println("Computing reference...");
             getReferenceOrbit();
+            createBLATableFE(ref, parameter.getScale());
         }
-        if(!isDeep()) refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+        if (!isDeep()) {
+            refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+            createBLATable(refComplex, parameter.getScale().doubleValue());
+        }
         return ref;
     }
 
     protected void setRef(List<FloatExpComplex> ref) {
         this.ref = ref;
-        if(!isDeep()) refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+        if (!isDeep()) {
+            refComplex = ref.stream().map(FloatExpComplex::toComplex).toList();
+            createBLATable(refComplex, parameter.getScale().doubleValue());
+        }
+        else createBLATableFE(ref, parameter.getScale());
         refVaild = true;
     }
 

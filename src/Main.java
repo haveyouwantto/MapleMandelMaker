@@ -1,4 +1,5 @@
 import hywt.mandel.*;
+import hywt.mandel.numtype.FloatExp;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -12,20 +13,26 @@ public class Main {
     public static void main(String[] args) throws IOException {
         System.out.println(Arrays.toString(args));
 
-        if (args.length ==0){
+        if (args.length == 0) {
             Configuration configuration = Configuration.load(new FileInputStream("config.prop"));
             RenderManager manager = new RenderManager(configuration);
             manager.start();
-        } else if (args.length >= 1) {
+        } else {
             String mode = args[0];
             switch (mode) {
                 case "s":
                     Configuration configuration = Configuration.load(new FileInputStream("config.prop"));
                     new RenderServer(configuration);
-                    case "c":
+                case "c":
                     InetAddress address = InetAddress.getByName(args[1]);
                     int port = Integer.parseInt(args[2]);
-                    new RenderClient(address, port).start();
+                    int thread = -1;
+                    if (args.length >= 4)
+                        thread = Integer.parseInt(args[3]);
+                    new RenderClient(address, port, thread).start();
+                    case "k": // kfb convert
+                    Configuration cfg = Configuration.load(new FileInputStream("config.prop"));
+                    new KFBConverter(cfg).start();
             }
         }
 

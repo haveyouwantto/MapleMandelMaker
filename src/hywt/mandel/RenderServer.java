@@ -172,8 +172,10 @@ public class RenderServer {
                     iterationMap.write(mapOut);
                     mapOut.close();
 
-                    colorizer.paint(iterationMap, image);
-                    ImageIO.write(image, "jpg", configuration.createFile(String.format("%08d.jpg", entry.getKey())));
+                    if (configuration.isSavePreview()) {
+                        colorizer.paint(iterationMap, image);
+                        ImageIO.write(image, "jpg", configuration.createFile(String.format("%08d.jpg", entry.getKey())));
+                    }
 
                     entry.setValue(TaskState.COMPLETED);
                 } else {

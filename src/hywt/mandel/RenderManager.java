@@ -42,20 +42,22 @@ public class RenderManager {
 
         int i = config.getStart();
         while (mandelbrot.getScale().doubleValue() < 16) {
-            File outFile = config.createFile(String.format("%08d.jpg", i));
+            File outFile = config.createFile(String.format("%08d.imp", i));
             if (!outFile.exists()) {
                 mandelbrot.setZoomOrd(i);
                 System.out.printf("Frame %d: %s\n", i, mandelbrot.getScale());
+                long t = System.currentTimeMillis();
                 mandelbrot.render(iterationMap);
+                System.out.println((System.currentTimeMillis() - t) / 1000.0);
                 OutputStream mapOut = new GZIPOutputStream(
-                        new FileOutputStream(
-                                config.createFile(String.format("%08d.imp", i))
-                        )
+                        new FileOutputStream(outFile)
                 );
                 iterationMap.write(mapOut);
                 mapOut.close();
-                colorizer.paint(iterationMap, image);
-                ImageIO.write(image, "jpg", outFile);
+                if (config.isSavePreview()) {
+                    colorizer.paint(iterationMap, image);
+                    ImageIO.write(image, "jpg", config.createFile(String.format("%08d.jpg", i)));
+                }
             }
 
             i++;

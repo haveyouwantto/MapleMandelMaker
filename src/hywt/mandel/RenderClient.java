@@ -12,10 +12,16 @@ import java.util.List;
 public class RenderClient {
     private InetAddress address;
     private int port;
+    private int thread;
 
-    public RenderClient(InetAddress address, int port) {
+    public RenderClient(InetAddress address, int port, int thread) {
         this.address = address;
         this.port = port;
+        this.thread = thread;
+    }
+
+    public RenderClient(InetAddress address, int port) {
+        this(address, port, -1);
     }
 
     public void start() {
@@ -30,7 +36,7 @@ public class RenderClient {
                 System.out.println("Waiting for configuration");
                 Configuration config = (Configuration) ois.readObject();
 
-                Mandelbrot mandelbrot = new Mandelbrot(config.getParameter());
+                Mandelbrot mandelbrot = new Mandelbrot(config.getParameter(), thread);
 
                 System.out.println("Reading reference data");
                 List<FloatExpComplex> ref = RenderManager.readRef(ois);

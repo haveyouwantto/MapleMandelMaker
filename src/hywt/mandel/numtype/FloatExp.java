@@ -34,12 +34,22 @@ public class FloatExp implements Serializable {
     private FloatExp norm() {
         if (this.base == 0) {
             this.exp = 0;
-        }
-        else if (this.base > 10 || this.base < 1) {
+        } else if (this.base > 10 || this.base < 1) {
             int exp = getExpOfDouble(this.base);
-            this.exp += exp;
-            this.base /= getExp(exp);
+            if (exp != 0) {
+                this.exp += exp;
+                this.base /= getExp(exp);
+            }
         }
+
+        if (this.base > 10) {
+            this.exp++;
+            this.base /= 10;
+        } else if (this.base < 1) {
+            this.exp--;
+            this.base *= 10;
+        }
+
         return this;
     }
 
@@ -50,8 +60,29 @@ public class FloatExp implements Serializable {
     }
 
     private static int getExpOfDouble(double d) {
-        return (int) Math.floor(Math.log(Math.abs(d)) * 0.4342944819032518);
+        if (d == 0) {
+            throw new IllegalArgumentException("Exponent of zero is undefined.");
+        }
+
+        long bits = Double.doubleToLongBits(d);
+        int rawExp = (int) ((bits >>> 52) & 0x7FF); // Extract the exponent bits
+
+        int actualExp;
+        if (rawExp == 0) {
+            // Subnormal number: Effective exponent = -1022 (bias) + offset from leading zeros in mantissa
+            long mantissa = bits & 0x000FFFFFFFFFFFFFL; // Extract mantissa (52 bits)
+            int leadingZeros = Long.numberOfLeadingZeros(mantissa) - 12; // Adjust for 52-bit mantissa
+            actualExp = -1022 - leadingZeros;
+        } else {
+            // Normalized number: Effective exponent = rawExp - 1023 (bias)
+            actualExp = rawExp - 1023;
+        }
+
+        // Convert base-2 exponent to base-10 exponent using a fixed approximation
+        // Base-10 exponent ≈ floor(actualExp * log10(2))
+        return (int) Math.floor(actualExp * LOG10_2);
     }
+
 
     public double doubleValue() {
         return this.base * getExp(this.exp);

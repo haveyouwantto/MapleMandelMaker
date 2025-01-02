@@ -1,6 +1,7 @@
 package hywt.mandel;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class IterationMap {
@@ -35,7 +36,6 @@ public class IterationMap {
         this.maxIter = maxIter;
     }
 
-
     // Write the object to an OutputStream
     public void write(OutputStream out) throws IOException {
         DataOutputStream dos = new DataOutputStream(out);
@@ -49,7 +49,7 @@ public class IterationMap {
 
         for (int y = 0; y < getHeight(); y++) {
             for (int x = 0; x < getWidth(); x++) {
-                double itF = getPixel(x,y);
+                double itF = getPixel(x, y);
 
                 long it = (long) itF;
                 long diff = it - prev;
@@ -92,9 +92,73 @@ public class IterationMap {
         return iterationMap;
     }
 
+    public void writeKFB(OutputStream o) throws IOException {
+        OutputStream out = new BufferedOutputStream(o);
+        out.write("KFB".getBytes()); // Magic
+
+        ByteBuffer buf = ByteBuffer.allocate(4);
+
+        buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+
+        int width = getWidth();
+        int height = getHeight();
+
+        // write width
+        buf.putInt(width);
+        out.write(buf.array());
+
+        // write height
+        buf.clear();
+        buf.putInt(height);
+        out.write(buf.array());
+
+        // write iteration
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                double itF = getPixel(x, y);
+                int it = (int) itF;
+
+                buf.clear();
+                buf.putInt(it);
+                out.write(buf.array());
+            }
+        }
+
+        out.write(new byte[] { 1, 0, 0, 0 });
+
+        // write palette data (dummy)
+
+        int colors = 3;
+        buf.clear();
+        buf.putInt(colors);
+        out.write(buf.array());
+
+        // write color
+        out.write(new byte[] { 0, 0, 0,
+                (byte) 0xFF, 0, 0,
+                0, (byte) 0xFF, 0 });
+
+        // write max iterations
+        buf.clear();
+        buf.putInt((int) getMaxIter());
+        out.write(buf.array());
+
+        // write phase
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                double itF = getPixel(x, y);
+                int it = (int) itF;
+                double phase = itF - it;
+                buf.clear();
+                buf.putFloat((float) phase);
+                out.write(buf.array());
+            }
+        }
+    }
+
     @Override
     public String toString() {
-        return "IterationMap{" + getWidth() +"x"+getHeight()+
+        return "IterationMap{" + getWidth() + "x" + getHeight() +
                 ", maxIter=" + maxIter +
                 '}';
     }

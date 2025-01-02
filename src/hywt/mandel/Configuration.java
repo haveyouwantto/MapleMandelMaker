@@ -15,6 +15,7 @@ public class Configuration implements Serializable {
     private int width;
     private int height;
     private int start;
+    private boolean savePreview;
 
     public final static long serialVersionUID = 1L;
 
@@ -36,6 +37,7 @@ public class Configuration implements Serializable {
         c.width = Integer.parseInt(prop.getProperty("width", "1920"));
         c.height = Integer.parseInt(prop.getProperty("height", "1080"));
         c.start = Integer.parseInt(prop.getProperty("start", "0"));
+        c.savePreview = Boolean.parseBoolean(prop.getProperty("savePreview", "true"));
         return c;
     }
 
@@ -72,5 +74,9 @@ public class Configuration implements Serializable {
 
     public int getStart() {
         return start;
+    }
+
+    public boolean isSavePreview() {
+        return savePreview;
     }
 }
