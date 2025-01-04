@@ -32,7 +32,7 @@ public class FloatExpComplex implements Serializable {
     }
 
     public FloatExpComplex square() {
-        return new FloatExpComplex(re.mul(re).subMut(im.mul(im)), re.mul(im).mul(2));
+        return new FloatExpComplex(re.square().subMut(im.square()), re.mul(im).mul(2));
     }
 
     public FloatExpComplex div(FloatExpComplex other) {

@@ -324,7 +324,7 @@ public class Mandelbrot {
         return result;
     }
 
-    PTBLAFEResult getPTBLAFE(FloatExpComplex dc, List<FloatExpComplex> ref, List<List<BLAFE>> table) {
+    double getPTBLAFE(FloatExpComplex dc, List<FloatExpComplex> ref, List<List<BLAFE>> table) {
         FloatExpComplex dz = new FloatExpComplex(0, 0);
 
         double iter = -1;
@@ -348,7 +348,7 @@ public class Mandelbrot {
                 iter++;
                 refIter++;
             }
-            if (refIter >= ref.size()) return new PTBLAFEResult(iter, true, null, refIter);
+            if (refIter >= ref.size()) return iter;
 //            if (dz.getRe().scale() > -150 && dz.getIm().scale() > -150) {
 //                return new PTBLAFEResult(iter, false, dz.toComplex(), refIter);
 //            }
@@ -360,14 +360,14 @@ public class Mandelbrot {
                 double fracIter = Math.log(valAbs.doubleValue()) / 2;
                 fracIter = Math.log(fracIter / Math.log(2)) / Math.log(2);
                 iter += 1 - fracIter;
-                return new PTBLAFEResult(iter, true, null, refIter);
+                return iter;
             }
             if (valAbs.sub(dzNorm).compareTo(zero) < 0 || refIter == ref.size() - 1) {
                 dz = val;
                 refIter = 0;
             }
         }
-        return new PTBLAFEResult(iter, true, null, refIter);
+        return iter;
     }
 
     static class PTBLAFEResult {
@@ -409,13 +409,7 @@ public class Mandelbrot {
             return getPTBLA(delta, refComplex, tableComplex, 0, 0, 0, 0);
         } else {
             FloatExpComplex delta = getDeltaFE(x, y, width, height);
-            PTBLAFEResult result = getPTBLAFE(delta, ref, table);
-            double iterations;
-            if (result.e) iterations = result.it;
-            else {
-                iterations = getPTBLA(delta.toComplex(), refComplex, tableComplex, result.z.getRe(), result.z.getIm(), result.it, result.ref);
-            }
-            return iterations;
+            return getPTBLAFE(delta, ref, table);
         }
     }
 
