@@ -1,4 +1,4 @@
-package hywt.mandel;
+package hywt.mandel.colors;
 
 public class Color {
     public final int r;
@@ -33,11 +33,60 @@ public class Color {
         this(
                 rgb >> 16 & 0xff,
                 rgb >> 8 & 0xff,
-                rgb | 0xff
-        );
+                rgb | 0xff);
     }
 
     public int getRGB() {
         return (r << 16) | (g << 8) | b;
+    }
+
+    public static Color fromHSV(float h, float s, float v) {
+        float r, g, b;
+        if (s == 0) {
+            r = g = b = v; // achromatic (grey)
+        } else {
+            float h_ = h * 6f;
+            float f = h_ - (int) h_;
+            float p = v * (1f - s);
+            float q = v * (1f - s * f);
+            float t = v * (1f - s * (1f - f));
+
+            int i = (int) h_;
+            switch (i) {
+                case 0:
+                    r = v;
+                    g = t;
+                    b = p;
+                    break;
+                case 1:
+                    r = q;
+                    g = v;
+                    b = p;
+                    break;
+                case 2:
+                    r = p;
+                    g = v;
+                    b = t;
+                    break;
+                case 3:
+                    r = p;
+                    g = q;
+                    b = v;
+                    break;
+                case 4:
+                    r = t;
+                    g = p;
+                    b = v;
+                    break;
+                case 5:
+                    r = v;
+                    g = p;
+                    b = q;
+                    break;
+                default:
+                    r = g = b = 0; // this shouldn't happen
+            }
+        }
+        return new Color((int) (r * 255), (int) (g * 255), (int) (b * 255));
     }
 }

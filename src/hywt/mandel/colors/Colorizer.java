@@ -1,4 +1,6 @@
-package hywt.mandel;
+package hywt.mandel.colors;
+
+import hywt.mandel.IterationMap;
 
 import java.awt.image.BufferedImage;
 

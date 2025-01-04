@@ -1,5 +1,7 @@
 package hywt.mandel;
 
+import hywt.mandel.colors.BasicEscapeColorizer;
+import hywt.mandel.colors.Colorizer;
 import hywt.mandel.numtype.FloatExp;
 import hywt.mandel.numtype.FloatExpComplex;
 
