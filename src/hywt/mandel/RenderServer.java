@@ -163,7 +163,6 @@ public class RenderServer {
                     IterationMap iterationMap = IterationMap.read(ois);
                     contributions.putIfAbsent(clientIp, 0);
                     contributions.put(clientIp, contributions.get(clientIp) + 1);
-                    Runtime.getRuntime().exec("clear");
                     log(clientIp, "Received frame " + entry.getKey());
 
                     OutputStream mapOut = new GZIPOutputStream(
