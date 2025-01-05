@@ -3,7 +3,7 @@ package hywt.mandel.colors;
 import java.util.Random;
 
 public class RandomPalette implements Palette {
-    private long seed;
+    protected long seed;
 
     public RandomPalette(long seed) {
         this.seed = seed;

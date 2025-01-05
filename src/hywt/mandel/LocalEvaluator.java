@@ -10,10 +10,7 @@ import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
 
-import hywt.mandel.colors.BasicEscapeColorizer;
-import hywt.mandel.colors.Colorizer;
-import hywt.mandel.colors.DifferentialColorizer;
-import hywt.mandel.colors.RandomPalette;
+import hywt.mandel.colors.*;
 import hywt.mandel.numtype.FloatExp;
 
 public class LocalEvaluator {
@@ -79,8 +76,7 @@ public class LocalEvaluator {
         ExecutorService executor = Executors.newFixedThreadPool(threads);
         List<Future<?>> futures = new ArrayList<>();
 
-        DifferentialColorizer colorizer = new DifferentialColorizer(new RandomPalette(40932042343290424L));
-        colorizer.setBlendOriginal(true);
+        BasicEscapeColorizer colorizer = new BasicEscapeColorizer(new BWColorPalette(323L),32, false);
         int width = config.getWidth();
         int height = config.getHeight();
 
