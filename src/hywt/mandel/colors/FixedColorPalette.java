@@ -2,6 +2,9 @@ package hywt.mandel.colors;
 
 import java.util.List;
 
+/**
+ * A palette that uses a fixed list of colors
+ */
 public class FixedColorPalette implements Palette{
     private List<Color> colors;
     public FixedColorPalette(List<Color> colors) {

@@ -4,6 +4,9 @@ import hywt.mandel.IterationMap;
 
 import java.awt.image.BufferedImage;
 
+/**
+ * A colorizer that paints an image based on an iteration map using escape time coloring
+ */
 public class BasicEscapeColorizer implements Colorizer {
     private Palette palette;
     private double step;

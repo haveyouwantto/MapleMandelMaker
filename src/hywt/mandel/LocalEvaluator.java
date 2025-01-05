@@ -2,98 +2,154 @@ package hywt.mandel;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.zip.GZIPInputStream;
 
 import javax.imageio.ImageIO;
 
 import hywt.mandel.colors.BasicEscapeColorizer;
 import hywt.mandel.colors.Colorizer;
-import hywt.mandel.colors.InfinitePalette;
+import hywt.mandel.colors.DifferentialColorizer;
+import hywt.mandel.colors.RandomPalette;
 import hywt.mandel.numtype.FloatExp;
 
 public class LocalEvaluator {
     private Configuration config;
-    private List<File> impFiles;
+    private Map<Integer, File> impFiles;
 
     public LocalEvaluator(Configuration config) {
         this.config = config;
-        impFiles = new ArrayList<>();
+        impFiles = new HashMap<>();
 
         double startValue = config.getParameter().getScale().log2Value();
         double finishScale = new FloatExp(16).log2Value();
-        
+
         for (int i = config.getStart(); i < finishScale - startValue; i++) {
             File file = config.createFile(String.format("%08d.imp", i));
-            impFiles.add(file);
+            impFiles.put(i, file);
         }
+
     }
 
-    public void evaluate(){
+    /**
+     * Evaluate all imp files
+     */
+    public void evaluate() {
         System.out.println("LocalEvaluator started");
-        for (File file : impFiles) {
+
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>();
+
+        for (Map.Entry<Integer, File> fileEntry : impFiles.entrySet()) {
+            File file = fileEntry.getValue();
             if (file.exists()) {
-                try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
-                    System.out.print("evaulate "+file+"\r");
-                    IterationMap.read(in);
-                } catch (IOException e) {
-                    System.out.println("corrupted imp file: "+file);
-                    file.delete();
-                }
-            } 
+                futures.add(executor.submit(() -> {
+                    try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
+                        System.out.print("evaulate " + file + "\r");
+                        IterationMap.read(in);
+                    } catch (IOException e) {
+                        System.out.println("corrupted imp file: " + file);
+                        file.delete();
+                    }
+                }));
+            }
+        }
+
+        executor.shutdown();
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    /**
+     * Colorize all imp files
+     */
     public void colorize() {
         System.out.println("Colorizer started");
 
-        Colorizer colorizer = new BasicEscapeColorizer(new InfinitePalette(3));
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>();
+
+        Colorizer colorizer = new DifferentialColorizer(); // new BasicEscapeColorizer(new RandomPalette(40932042343290424L), 1);
         int width = config.getWidth();
         int height = config.getHeight();
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        
-        int i = 0;
-        for (File file : impFiles) {
+
+        for (Map.Entry<Integer, File> fileEntry : impFiles.entrySet()) {
+            File file = fileEntry.getValue();
             if (file.exists()) {
-                try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
-                    IterationMap map = IterationMap.read(in);
-                    File pngFile = config.createFile(
-                        String.format("%08d.png", i)
-                    );
-                    System.out.println("Writing " + pngFile.getName());
-                    colorizer.paint(map, image);
-                    ImageIO.write(image, "png", pngFile);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } 
-            i++;
+                futures.add( executor.submit(() -> {
+                    try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
+                        IterationMap map = IterationMap.read(in);
+                        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                        File pngFile = config.createFile(
+                                String.format("%08d.png", fileEntry.getKey()));
+                        System.out.println("Writing " + pngFile.getName());
+                        colorizer.paint(map, image);
+                        ImageIO.write(image, "png", pngFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }));
+            }
+        }
+        executor.shutdown();
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
+    /**
+     * Export all imp files to KFB
+     */
     public void exportKFB() {
         System.out.println("KFBConverter started");
-        
-        int i = 0;
-        for (File file : impFiles) {
+
+        int threads = Runtime.getRuntime().availableProcessors();
+        ExecutorService executor = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>();
+
+        for (Map.Entry<Integer, File> fileEntry : impFiles.entrySet()) {
+            File file = fileEntry.getValue();
             if (file.exists()) {
-                try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
-                    IterationMap map = IterationMap.read(in);
-                    FloatExp scale = new FloatExp(4).div(config.getParameter().getScale().mul(FloatExp.fromLog2(i)));
-                    File kfbFile = config.createFile(
-                        String.format("%05d_%.2fe%03d.kfb", i, scale.getBase(), scale.getExp())
-                    );
-                    System.out.println("Writing " + kfbFile.getName());
-                    OutputStream out = new FileOutputStream(kfbFile);
-                    map.writeKFB(out);
-                    out.close();
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            } 
-            i++;
+                futures.add(executor.submit(() -> {
+                    try (InputStream in = new GZIPInputStream(new FileInputStream(file))) {
+                        IterationMap map = IterationMap.read(in);
+                        FloatExp scale = new FloatExp(4)
+                                .div(config.getParameter().getScale().mul(FloatExp.fromLog2(fileEntry.getKey())));
+                        File kfbFile = config.createFile(
+                                String.format("%05d_%.2fe%03d.kfb", fileEntry.getKey(), scale.getBase(),
+                                        scale.getExp()));
+                        System.out.println("Writing " + kfbFile.getName());
+                        OutputStream out = new FileOutputStream(kfbFile);
+                        map.writeKFB(out);
+                        out.close();
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }));
+            }
+        }
+        executor.shutdown();
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

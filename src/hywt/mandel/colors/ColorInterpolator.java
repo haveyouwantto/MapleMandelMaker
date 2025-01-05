@@ -1,7 +1,9 @@
 package hywt.mandel.colors;
 
+/**
+ * Interpolates between colors in a palette
+ */
 public class ColorInterpolator {
-
     private static Color colorTrans(Palette palette, double it) {
         double percent = it - Math.floor(it);
         int idx = (int) Math.floor(it);
@@ -12,7 +14,7 @@ public class ColorInterpolator {
         double b = (1 - percent) * c1.b + percent * c2.b;
         // double g = (1 - percent) * palette[c1][1] + (percent) * palette[c2][1];
         // double b = (1 - percent) * palette[c1][2] + (percent) * palette[c2][2];
-        return new Color((int)r, (int)g, (int)b);
+        return new Color((float)r, (float)g, (float)b);
     }
 
     public static Color getColor(Palette palette, double it, long maxIter, double step) {
