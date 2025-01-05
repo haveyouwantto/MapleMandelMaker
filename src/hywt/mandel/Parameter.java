@@ -10,11 +10,13 @@ public class Parameter implements Serializable {
     private final Apcomplex center;
     private final FloatExp scale;
     private final long maxIter;
+    private final double bailout;
 
-    public Parameter(Apcomplex center, FloatExp scale, long maxIter) {
+    public Parameter(Apcomplex center, FloatExp scale, long maxIter, double bailout) {
         this.center = center;
         this.scale = scale;
         this.maxIter = maxIter;
+        this.bailout = bailout;
     }
 
     public Apcomplex getCenter() {
@@ -27,6 +29,10 @@ public class Parameter implements Serializable {
 
     public long getMaxIter() {
         return maxIter;
+    }
+
+    public double getBailout() {
+        return bailout;
     }
 
     @Override

@@ -32,7 +32,8 @@ public class Configuration implements Serializable {
         BigDecimal im = new BigDecimal(prop.getProperty("imaginary"));
         FloatExp scale = new FloatExp(4).div(FloatExp.parseFloatExp(prop.getProperty("zoom")));
         long maxIter = Long.parseLong(prop.getProperty("iterations"));
-        Parameter p = new Parameter(new Apcomplex(new Apfloat(re), new Apfloat(im)), scale, maxIter);
+        double bailout = Double.parseDouble(prop.getProperty("bailout", "2"));
+        Parameter p = new Parameter(new Apcomplex(new Apfloat(re), new Apfloat(im)), scale, maxIter, bailout);
         Configuration c = new Configuration(p, new File(prop.getProperty("path")));
         c.width = Integer.parseInt(prop.getProperty("width", "1920"));
         c.height = Integer.parseInt(prop.getProperty("height", "1080"));

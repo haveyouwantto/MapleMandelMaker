@@ -36,7 +36,7 @@ public class Mandelbrot {
         this.center = p.getCenter();
         this.scale = p.getScale();
         this.maxIter = p.getMaxIter();
-        this.bailout = 4;
+        this.bailout = p.getBailout() * p.getBailout(); //squared
         ref = new ArrayList<>();
         refVaild = false;
 
