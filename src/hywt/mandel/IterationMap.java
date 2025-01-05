@@ -1,5 +1,10 @@
 package hywt.mandel;
 
+import hywt.mandel.colors.Color;
+import hywt.mandel.colors.DefaultPalette;
+import hywt.mandel.colors.Palette;
+import hywt.mandel.colors.RandomPalette;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -124,20 +129,22 @@ public class IterationMap {
             }
         }
 
-        out.write(new byte[] { 1, 0, 0, 0 });
+        out.write(new byte[]{1, 0, 0, 0});
 
         // write palette data (dummy)
 
         int colors = 128;
+        Palette p = new RandomPalette(30000L);
         buf.clear();
         buf.putInt(colors);
         out.write(buf.array());
 
         // write color
-        for (int i = 0; i <colors; i++) {
-            out.write(i);
-            out.write(i);
-            out.write(i);
+        for (int i = 0; i < colors; i++) {
+            Color c = p.get(i);
+            out.write(c.getByteB());
+            out.write(c.getByteG());
+            out.write(c.getByteR());
         }
 
         // write max iterations
@@ -152,7 +159,7 @@ public class IterationMap {
                 int it = (int) itF;
                 double phase = itF - it;
                 buf.clear();
-                buf.putFloat((float) phase);
+                buf.putFloat(1f - (float) phase);
                 out.write(buf.array());
             }
         }

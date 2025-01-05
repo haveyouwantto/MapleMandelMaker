@@ -95,6 +95,18 @@ public class Color {
         return new Color(this.r * val, this.g * val, this.b * val);
     }
 
+    public int getByteR(){
+        return (int) (r * 255f);
+    }
+
+    public int getByteG(){
+        return (int) (g * 255f);
+    }
+
+    public int getByteB(){
+        return (int) (b * 255f);
+    }
+
     private float clamp(float value) {
         return Math.max(0, Math.min(1, value));
     }
