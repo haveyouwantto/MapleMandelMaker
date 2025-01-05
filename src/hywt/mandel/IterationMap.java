@@ -128,15 +128,17 @@ public class IterationMap {
 
         // write palette data (dummy)
 
-        int colors = 3;
+        int colors = 128;
         buf.clear();
         buf.putInt(colors);
         out.write(buf.array());
 
         // write color
-        out.write(new byte[] { 0, 0, 0,
-                (byte) 0xFF, 0, 0,
-                0, (byte) 0xFF, 0 });
+        for (int i = 0; i <colors; i++) {
+            out.write(i);
+            out.write(i);
+            out.write(i);
+        }
 
         // write max iterations
         buf.clear();
@@ -154,6 +156,8 @@ public class IterationMap {
                 out.write(buf.array());
             }
         }
+
+        out.close();
     }
 
     @Override
