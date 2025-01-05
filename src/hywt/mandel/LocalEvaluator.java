@@ -79,7 +79,8 @@ public class LocalEvaluator {
         ExecutorService executor = Executors.newFixedThreadPool(threads);
         List<Future<?>> futures = new ArrayList<>();
 
-        Colorizer colorizer = new DifferentialColorizer(); // new BasicEscapeColorizer(new RandomPalette(40932042343290424L), 1);
+        DifferentialColorizer colorizer = new DifferentialColorizer(new RandomPalette(40932042343290424L));
+        colorizer.setBlendOriginal(true);
         int width = config.getWidth();
         int height = config.getHeight();
 
