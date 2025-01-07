@@ -18,6 +18,7 @@ public class Main {
                 case "server":
                     Configuration configuration = Configuration.load(new FileInputStream("config.prop"));
                     new RenderServer(configuration);
+                    break;
                 case "client":
                     InetAddress address = InetAddress.getByName(args[1]);
                     int port = Integer.parseInt(args[2]);
@@ -25,6 +26,7 @@ public class Main {
                     if (args.length >= 4)
                         thread = Integer.parseInt(args[3]);
                     new RenderClient(address, port, thread).start();
+                    break;
                 case "kfb": // kfb convert
                     Configuration cfg = Configuration.load(new FileInputStream("config.prop"));
                     new LocalEvaluator(cfg).exportKFB();
